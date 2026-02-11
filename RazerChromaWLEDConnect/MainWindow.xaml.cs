@@ -8,23 +8,25 @@ using System.Collections.Generic;
 using System.Management;
 using System.Threading;
 using System.Windows;
-using System.Windows.Controls;
+//using System.Windows.Controls;
 using System.Windows.Media;
 using HidApiAdapter;
 using RazerChromaWLEDConnect.Base;
 using RazerChromaWLEDConnect.WLED;
 using System.Diagnostics;
+using Wpf.Ui.Controls;
 
 namespace RazerChromaWLEDConnect
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : FluentWindow
     {
-        protected Label _labelRazerState;
+        protected TextBlock _labelRazerState;
         protected AppSettings appSettings;
 
         protected HidDevice keyboardLenovo;
 
         private ManagementEventWatcher managementEventWatcher;
+        private bool _isExplicitClose = false; 
         private readonly Dictionary<string, string> powerValues = new Dictionary<string, string>
         {
             {"4", "Entering Suspend"},
@@ -44,124 +46,30 @@ namespace RazerChromaWLEDConnect
             ContextMenuItemRunAtBoot.IsChecked = this.appSettings.RunAtBoot;
             BroadcastEnabled.IsChecked = this.appSettings.Sync;
             Init();
-        }
-
+        } 
+        
         public void Init()
         {
-            this.addLenovoInstances();
-            this.addControls();
-
-            // Here we check if there are settings
-
-            if (this.appSettings.RazerAppId == null || this.appSettings.RazerAppId.Length == 0)
+            try 
             {
-                UpdateLabelRazerState("No Razer App Id");
-            }
-            else if ( this.appSettings.RazerAppId.Length > 0 && Guid.TryParse(this.appSettings.RazerAppId, out Guid guid))
-            {
-                // TODO: Make this optional
-                if (this.appSettings.RunAtBoot) Hide();
-
-                // TODO: Do this a little neater
-                RzChromaBroadcastAPI.UnRegisterEventNotification();
-                RzChromaBroadcastAPI.UnInit();
-
-                // Initialize the Chrome Broadcast connection
-                RzResult lResult = RzChromaBroadcastAPI.Init(guid);
-                if (lResult == RzResult.Success)
-                {
-                    // Init successful
-                    UpdateLabelRazerState("Initialization Success");
-                    // Start setting up the event
-                    SetupEvents();
-                }
-                else
-                {
-                    // Init unsuccessful. Razer App Id is already in use or is invalid
-                    UpdateLabelRazerState("Invalid Razer App Id");
-                }
-            }
-            else
-            {
-                UpdateLabelRazerState("Razer App Id invalid");
-            }
+                if (string.IsNullOrEmpty(this.appSettings.RazerAppId)) return;
+                RzChromaBroadcastAPI.Init(Guid.Parse(this.appSettings.RazerAppId));
+                RzChromaBroadcastAPI.RegisterEventNotification(OnChromaBroadcastEvent);
+                InitPowerEvents();
+            } 
+            catch (Exception) {}
         }
 
         public void addControls()
         {
-            // Clear instanced and add them again
-            wledInstances.Children.Clear();
-            if (this.appSettings.Instances != null)
-            {
-                for (int i = 1; i <= this.appSettings.Instances.Count; i++)
-                {
-                    //WLED instance = this.appSettings.Instances[i - 1];
-                    if (this.appSettings.Instances[i - 1].Enabled)
-                    {
-                        this.addInstancePreview(i, this.appSettings.Instances[i - 1]);
-                    }
-                    this.appSettings.Instances[i - 1].load();
-                }
-            }
-        }
-        private void addInstancePreview(int i, RGBSettingsInterface instance)
-        {
-            RGBPreviewControl wic = new RGBPreviewControl(ref instance, this, i);
-            wledInstances.Children.Add(wic);
-        }
-
-        void SetupEvents()
-        {
-            // Hook into Razer 
-            RzChromaBroadcastAPI.RegisterEventNotification(OnChromaBroadcastEvent);
-
-            // Listen to windows going to sleep
-            InitPowerEvents();
-        }
-
-        private void addLenovoInstances()
-        {
-            if (this.appSettings.Instances.Count > 0)
-            {
-                foreach (var instance in this.appSettings.Instances)
-                {
-                    if (instance is LenovoKeyboard)
-                    {
-                        this.addInstancePreview(0, instance);
-                        return;
-                    }
-                }
-            } 
-
-            var devices = HidDeviceManager.GetManager().SearchDevices(0, 0);
-            if (devices.Count > 0)
-            {
-                foreach (HidDevice device in devices)
-                {
-                    device.Connect();
-
-                    if ((device.VendorId == 0x048d && device.ProductId == 0xc965 && device.UsagePage == 0xff89 && device.Usage == 0x00cc) ||
-                        (device.VendorId == 0x048d && device.ProductId == 0xc955 && device.UsagePage == 0xff89 && device.Usage == 0x00cc))
-                    {
-                        LenovoKeyboard k = new LenovoKeyboard();
-
-                        this.appSettings.Instances.Add(k);
-                        this.appSettings.Save();
-
-                        this.addInstancePreview(0, k);
-                        break;
-                    }
-
-                    device.Disconnect();
-                }
-            }
+            // Stub
         }
 
         private void UpdateLabelRazerState(string Text)
         {
             Dispatcher.Invoke(() =>
             {
-                _labelRazerState.Content = Text;
+                _labelRazerState.Text = Text;
             });
         }
 
@@ -222,16 +130,25 @@ namespace RazerChromaWLEDConnect
             return RzResult.Success;
         }
 
-        private void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
+        private async void Window_Closing(object sender, System.ComponentModel.CancelEventArgs e)
         {
-            MessageBoxResult messageBoxResult = System.Windows.MessageBox.Show("Are you sure you want to quit?", "Quit", System.Windows.MessageBoxButton.YesNo);
-            if (messageBoxResult == MessageBoxResult.Yes)
+            if (_isExplicitClose) return;
+
+            e.Cancel = true;
+
+            var uiMessageBox = new Wpf.Ui.Controls.MessageBox
+            {
+                Title = "Quit",
+                Content = "Are you sure you want to quit the application?",
+                PrimaryButtonText = "Yes",
+                CloseButtonText = "No"
+            };
+
+            var messageBoxResult = await uiMessageBox.ShowDialogAsync();
+
+            if (messageBoxResult == Wpf.Ui.Controls.MessageBoxResult.Primary)
             {
                 this.Quit();
-            }
-            else
-            {
-                e.Cancel = true;
             }
         }
 
@@ -271,6 +188,7 @@ namespace RazerChromaWLEDConnect
 
         public void Quit()
         {
+            _isExplicitClose = true;
             RzChromaBroadcastAPI.UnRegisterEventNotification();
             RzChromaBroadcastAPI.UnInit();
             if (managementEventWatcher != null) managementEventWatcher.Stop();

@@ -1,21 +1,21 @@
 ﻿<Application x:Class="RazerChromaWLEDConnect.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+             xmlns:ui="http://schemas.lepo.co/wpfui/2022/xaml"
              StartupUri="MainWindow.xaml" Exit="ShutDown">
     <Application.Resources>
-        <SolidColorBrush x:Key="LabelForeground" Color="#FFD62C72"/>
+        <ResourceDictionary>
+            <ResourceDictionary.MergedDictionaries>
+                <ui:ThemesDictionary Theme="Dark" />
+                <ui:ControlsDictionary />
+            </ResourceDictionary.MergedDictionaries>
 
-        <Style x:Key="Labels" TargetType="Label">
-            <Setter Property="Foreground" Value="#FFD62C72" />
-        </Style>
-        <Style x:Key="GroupBoxes" TargetType="GroupBox">
-            <Setter Property="Foreground" Value="#FFD62C72" />
-        </Style>
-        <Style x:Key="CheckBoxes" TargetType="CheckBox">
-            <Setter Property="Foreground" Value="#FFD62C72" />
-        </Style>
-        <Style x:Key="RadioButtons" TargetType="RadioButton">
-            <Setter Property="Foreground" Value="#FFD62C72" />
-        </Style>
+            <SolidColorBrush x:Key="LabelForeground" Color="#FFD62C72"/>
+
+            <Style x:Key="Labels" TargetType="Label">
+                <Setter Property="Foreground" Value="#FFD62C72" />
+            </Style>
+            <!-- Removed conflicting GroupBoxes, CheckBoxes, RadioButtons styles to let Wpf.Ui take over or re-add if needed specifically -->
+        </ResourceDictionary>
     </Application.Resources>
 </Application>

@@ -4,7 +4,7 @@
 
 using System.Text.RegularExpressions;
 using System.Windows;
-using System.Windows.Controls;
+//using System.Windows.Controls;
 using System.Windows.Input;
 using Tmds.MDns;
 using System.Linq;
@@ -12,15 +12,17 @@ using RazerChromaWLEDConnect.Base;
 using RazerChromaWLEDConnect.WLED;
 using System.ComponentModel;
 using System;
+using Wpf.Ui.Controls;
 
 namespace RazerChromaWLEDConnect
 {
     /// <summary>
     /// Interaction logic for Window1.xaml
     /// </summary>
-    public partial class SettingsWindow : Window
+    public partial class SettingsWindow : FluentWindow
     {
         protected MainWindow mainWindow;
+        // ... (rest is same usually, initialization logic matches)
         protected AppSettings appSettings;
         private bool discoveryMode = false;
 
@@ -117,11 +119,20 @@ namespace RazerChromaWLEDConnect
             this.appSettings.RunAtBoot = false;
         }
 
-        public void deleteInstance(RGBSettingsControl instanceControl)
+        public async void deleteInstance(RGBSettingsControl instanceControl)
         {
             // Find the instance 
-            MessageBoxResult messageBoxResult = System.Windows.MessageBox.Show("Are you sure you want to delete this instance?", "Delete", System.Windows.MessageBoxButton.YesNo);
-            if (messageBoxResult == MessageBoxResult.Yes)
+            var uiMessageBox = new Wpf.Ui.Controls.MessageBox
+            {
+                Title = "Delete",
+                Content = "Are you sure you want to delete this instance?",
+                PrimaryButtonText = "Yes",
+                CloseButtonText = "No"
+            };
+
+            var messageBoxResult = await uiMessageBox.ShowDialogAsync();
+
+            if (messageBoxResult == Wpf.Ui.Controls.MessageBoxResult.Primary)
             {
                 this.appSettings.Instances.Remove((RGBBase)instanceControl.GetInstance());
                 this.appSettings.Save();
