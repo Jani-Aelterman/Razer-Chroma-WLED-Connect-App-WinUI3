@@ -10,11 +10,11 @@
                 <ui:ControlsDictionary />
             </ResourceDictionary.MergedDictionaries>
 
-            <SolidColorBrush x:Key="LabelForeground" Color="#FFD62C72"/>
+            <!--<SolidColorBrush x:Key="LabelForeground" Color="#FFD62C72"/>-->
 
-            <Style x:Key="Labels" TargetType="Label">
+            <!--<Style x:Key="Labels" TargetType="Label">
                 <Setter Property="Foreground" Value="#FFD62C72" />
-            </Style>
+            </Style>-->
             <!-- Removed conflicting GroupBoxes, CheckBoxes, RadioButtons styles to let Wpf.Ui take over or re-add if needed specifically -->
         </ResourceDictionary>
     </Application.Resources>

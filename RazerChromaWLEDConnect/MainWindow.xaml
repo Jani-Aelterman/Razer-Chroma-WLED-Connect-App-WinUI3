@@ -125,11 +125,16 @@
                 </ui:CardControl>
 
                 <!-- Settings Button -->
-            <!--<Button Content="Open Settings" HorizontalAlignment="Stretch" Click="settingsShowWindow" Margin="20,10,20,10" Padding="10"/>-->
-            <ui:Button Content="Open Settings" HorizontalAlignment="Stretch" Click="settingsShowWindow" Margin="20,10,20,10" Padding="10" Icon="Settings24"/>
+                <!--<Button Content="Open Settings" HorizontalAlignment="Stretch" Click="settingsShowWindow" Margin="20,10,20,10" Padding="10"/>-->
+                <ui:Button HorizontalAlignment="Stretch" Click="settingsShowWindow" Margin="20,10,20,10" Padding="10">
+                    <StackPanel Orientation="Horizontal">
+                        <ui:SymbolIcon Symbol="Settings24" Margin="0,0,8,0"/>
+                        <TextBlock Text="Open Settings"/>
+                    </StackPanel>
+                </ui:Button>
 
 
-            <!-- WLED Instances Placeholder -->
+                <!-- WLED Instances Placeholder -->
             <ui:TextBlock Text="WLED Instances" FontWeight="SemiBold" Margin="0,10,0,0" />
             <Border BorderBrush="{DynamicResource ControlStrokeColorDefaultBrush}" BorderThickness="1" CornerRadius="8" Height="100">
                  <ScrollViewer HorizontalScrollBarVisibility="Disabled" VerticalScrollBarVisibility="Auto" Padding="10">
